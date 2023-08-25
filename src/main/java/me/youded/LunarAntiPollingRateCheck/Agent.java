@@ -9,7 +9,6 @@ import org.objectweb.asm.ClassWriter;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.Arrays;
 
 public class Agent {
     public static void premain(String args, Instrumentation inst) {
@@ -36,20 +35,11 @@ public class Agent {
                             for (AbstractInsnNode insn : method.instructions) {
                                 if (insn.getOpcode() == Opcodes.LDC && ((LdcInsnNode) insn).cst
                                         .equals("Unable to start polling detection thread in headless client!")) {
-                                    for (MethodNode methoda : cn.methods) {
-                                        methoda.instructions.clear();
-                                        methoda.localVariables.clear();
-                                        methoda.exceptions.clear();
-                                        methoda.tryCatchBlocks.clear();
-                                        InsnList insnList = new InsnList();
-                                        if (methoda.desc.endsWith(")V")) {
-                                            insnList.add(new InsnNode(Opcodes.RETURN));
-                                        } else {
-                                            insnList.add(new InsnNode(Opcodes.ICONST_1));
-                                            insnList.add(new InsnNode(Opcodes.IRETURN));
-                                        }
-                                        methoda.instructions.insert(insnList);
-                                    }
+                                    method.instructions.clear();
+                                    method.localVariables.clear();
+                                    method.exceptions.clear();
+                                    method.tryCatchBlocks.clear();
+                                    method.instructions.insert(new InsnNode(Opcodes.RETURN));
                                     ClassWriter cw = new ClassWriter(cr, 0);
                                     cn.accept(cw);
                                     return cw.toByteArray();
